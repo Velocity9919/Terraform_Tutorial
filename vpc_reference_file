@@ -1,0 +1,189 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+# Configure the AWS Provider
+provider "aws" {
+  region = "ap-south-1"
+}
+
+# creating vpc
+
+resource "aws_vpc" "main" {
+  cidr_block       = "10.0.0.0/16"
+  instance_tenancy = "default"
+  enable_dns_support = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "timing"
+    terraform = "true"
+    Environment = "DEV"
+  }
+}
+
+# create internet gatway to vpc
+
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+  
+  tags = {
+    Name = "timing"
+    terraform = "true"
+    Environment = "DEV"
+  }
+}
+
+# create public subnet
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.1.0/24"
+
+  tags = {
+    Name = "timing_public_subnet"
+    terraform = "true"
+    Environment = "DEV"
+  }
+}
+
+# create route table for public subnet
+
+resource "aws_route_table" "public_route_table" {
+    vpc_id = aws_vpc.main.id
+
+    route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
+  }
+
+  tags = {
+    Name = "timing_public_rt"
+    terraform = "true"
+    Environment = "DEV"
+  }
+
+}
+
+# create raute table association for public subnet
+
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_route_table.id
+}
+
+# creating private subnet
+
+resource "aws_subnet" "private_subnet" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.2.0/24"
+
+  tags = {
+    Name = "timing_private_subnet"
+    terraform = "true"
+    Environment = "DEV"
+  }
+}
+
+# create route table for private subnet
+
+resource "aws_route_table" "private_route_table" {
+    vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "timing_private_rt"
+    terraform = "true"
+    Environment = "DEV"
+  }
+
+}
+
+# create raute table association for private subnet
+
+resource "aws_route_table_association" "private" {
+  subnet_id      = aws_subnet.private_subnet.id
+  route_table_id = aws_route_table.private_route_table.id
+}
+
+# creating database subnet
+
+resource "aws_subnet" "database_subnet" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.3.0/24"
+
+  tags = {
+    Name = "timing_database_subnet"
+    terraform = "true"
+    Environment = "DEV"
+  }
+}
+
+
+# create route table for database subnet
+
+resource "aws_route_table" "database_route_table" {
+    vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "timing_database_rt"
+    terraform = "true"
+    Environment = "DEV"
+  }
+
+}
+
+# create raute table association for database subnet
+
+resource "aws_route_table_association" "database" {
+  subnet_id      = aws_subnet.database_subnet.id
+  route_table_id = aws_route_table.database_route_table.id
+}
+
+# creating elastic ip for natgate way
+
+resource "aws_eip" "nat" {
+    domain = "vpc"
+
+    tags = {
+    Name = "timing_eip"
+    terraform = "true"
+    Environment = "DEV"
+  }
+}
+
+# creating nat_gateway
+
+resource "aws_nat_gateway" "gw" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public_subnet.id
+
+  tags = {
+    Name = "timing_gw"
+    terraform = "true"
+    Environment = "DEV"
+  }
+
+}
+
+# creating aws_route for nat gatway (for private)
+
+resource "aws_route" "private" {
+  route_table_id            = aws_route_table.private_route_table.id
+  destination_cidr_block    = "0.0.0.0/0"
+  nat_gateway_id = aws_nat_gateway.gw.id
+  # depends_on                = [aws_route_table.private]
+}
+
+# creating aws_route for nat gatway (for database)
+
+resource "aws_route" "database" {
+  route_table_id            = aws_route_table.database_route_table.id
+  destination_cidr_block    = "0.0.0.0/0"
+  nat_gateway_id = aws_nat_gateway.gw.id
+ # depends_on                = [aws_route_table.database]
+}
