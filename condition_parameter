@@ -1,0 +1,38 @@
+# this is for condition parameter ( if variable is true it will create t3.large)
+# if variables is false it will create t2.micro
+# if variables is PROD it will create t3.large othrwise (like DEV or PRE PROD) it will create t2.micro
+
+resource "aws_instance" "condition" {
+    ami = "ami-012b9156f755804f5"
+    instance_type = var.env == "PROD" ? "t3.large" : "t2.micro"
+}
+
+# variables for condition parameter
+
+variable "isProd" {
+  type = bool
+  default = false
+}
+
+# it will create t2.micro because default value is "false"
+
+variable "isProd" {
+  type = bool
+  default = true
+}
+# it will create t3.large because default value is "true"
+
+
+# variables for condition parameter using string
+
+variable "env" {
+  type = string
+  default = "DEV"
+}
+# it will create t2.micro because default value is "DEV"
+
+variable "env" {
+  type = string
+  default = "PROD"
+}
+# it will create t3.large because default value is "PROD"
