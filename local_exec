@@ -1,0 +1,32 @@
+# Local-exec command ( it is used to store data in local system like ip address or any information)
+
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      version = "5.13.1"
+    }
+  }
+}
+
+provider "aws" {
+  # Configuration options
+  region = "ap-south-1"
+  access_key = "AKIA6JFVU6E4CSOI54"
+  secret_key = "jsDYdCpY0DtZdH4N1xiOtGCLeHzZgw/XHzDSi6"
+}
+
+resource "aws_instance" "instance_1" {
+  ami           = "ami-0f5ee92e2d63afc18"
+  instance_type = "t2.micro"
+  subnet_id = "subnet-0e227369758f96074"
+  key_name = "ubuntukey"
+  provisioner "local-exec" {
+    command = "echo Public IP: $(aws_instance.instance_1.private_IP) > private_ip.txt"
+    # it will save private ip in private_ip.txt file
+  }
+
+  tags = {
+    Name = "HelloWorld"
+  }
+}
