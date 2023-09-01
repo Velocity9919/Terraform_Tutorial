@@ -1,0 +1,84 @@
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      version = "5.13.1"
+    }
+  }
+}
+
+provider "aws" {
+  # Configuration options
+  region = "ap-south-1"
+  access_key = "AKIA6JFVU6E4JBUUEZP3"
+  secret_key = "PknbT3em5PkCLh1KbqeoGjrWyfCju0QAGu/FRu8o"
+}
+
+
+# count parameter
+# you can maintaion subnet id as of your choice
+# it will create 3 instances like (ec2.0 and ec2.1 and ec2.2) because count parameter will start form 0,1,2 like this 
+
+
+resource "aws_instance" "ec2" {
+  ami           = "ami-0f5ee92e2d63afc18"
+  instance_type = "t2.micro"
+  subnet_id = "subnet-0e227369758f96074"  
+  key_name = "ubuntukey"
+  count = 3                              
+
+  tags = {
+    Name = "HelloWorld"
+  }
+}
+
+# this is for count parameter (count index will start from 0 like 0,1,2) and it will create with names
+
+resource "aws_instance" "web-server" {
+    count = 3
+    ami = "ami-0f5ee92e2d63afc18"
+    instance_type = "t2.micro"
+    tags = {
+        Name = var.instance_names[count.index]
+    }
+}
+
+# variables for count parameter
+
+variable "instance_names" {
+    type = list
+    default = ["web-server","Api-server","DB-server"]  
+}
+
+
+count parameter challanges :-
+
+# for example if you want to create IAM users,in this case you cant use count parameter directly because you need to create user names with defferent names.
+  to over come this problem "${count.index}" came in to the picture.
+
+
+resource "aws_iam_user" "lb" {
+  count = 3
+  name = "Dev-${count.index}"
+  
+}
+
+
+# it will create 3 IAM users like Dev-0 ,Dev-1 and Dev-2 but i want with defferent names like ( Dev,Qa,Uat ) like this for this
+
+
+
+resource "aws_iam_user" "lb" {
+  count = 3
+  name = var.users[count.index]
+  
+}
+
+
+variable "users" {
+    type = list
+    default = ["Dev","Qa","Uat"]
+}
+
+
+# it will ctreat users with dev,qa,uat names 
