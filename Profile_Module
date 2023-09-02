@@ -1,0 +1,29 @@
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      version = "5.13.1"
+    }
+  }
+}
+
+
+terraform {
+  backend "s3" {
+    bucket = "mybucket"
+    key    = "dev/ec2.tfvars"
+    region = "us-east-1"
+	dynamodb_table = "State-Locking"
+    profile = "DEV"
+  }
+}
+
+it will create profile called "DEV"
+and credentials will be saved in C:\Users\hi\.aws/config
+
+# aws configure --profile DEV
+
+AWS Access Key ID :  "AKIA6JFVU6E4JBUUEZP3"
+AWS Secret Access Key : "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"
+Default region name : "ap-south-1"
+Default output format : json
